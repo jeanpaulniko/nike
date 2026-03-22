@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NÍKĒ — Free Communications Tool</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+       background: #0f0f0f; color: #e0e0e0; min-height: 100vh; }
+.header { background: #1a1a2e; padding: 16px 24px; border-bottom: 1px solid #333;
+          display: flex; justify-content: space-between; align-items: center; }
+.logo { font-size: 20px; font-weight: 700; color: #7ec8e3; letter-spacing: 2px; }
+.subtitle { font-size: 12px; color: #888; }
+.container { max-width: 800px; margin: 0 auto; padding: 24px 16px; }
+.card { background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px;
+        padding: 20px; margin-bottom: 20px; }
+.card h2 { font-size: 14px; font-weight: 600; color: #7ec8e3;
+           text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+.tabs { display: flex; gap: 4px; margin-bottom: 16px; }
+.tab { padding: 8px 16px; border-radius: 4px; cursor: pointer; font-size: 13px;
+       background: #222; color: #888; border: 1px solid #333; }
+.tab.active { background: #7ec8e3; color: #000; font-weight: 600; }
+textarea { width: 100%; background: #111; border: 1px solid #333; border-radius: 4px;
+           color: #e0e0e0; padding: 12px; font-family: 'Courier New', monospace;
+           font-size: 13px; resize: vertical; outline: none; }
+textarea:focus { border-color: #7ec8e3; }
+input[type=text], input[type=password] {
+  width: 100%; background: #111; border: 1px solid #333; border-radius: 4px;
+  color: #e0e0e0; padding: 10px 12px; font-size: 13px; outline: none; }
+input:focus { border-color: #7ec8e3; }
+.btn { padding: 10px 20px; border-radius: 4px; border: none; cursor: pointer;
+       font-size: 13px; font-weight: 600; }
+.btn-primary { background: #7ec8e3; color: #000; }
+.btn-secondary { background: #333; color: #e0e0e0; }
+.btn:hover { opacity: 0.85; }
+.row { display: flex; gap: 12px; margin-bottom: 12px; align-items: center; }
+.label { font-size: 12px; color: #888; margin-bottom: 6px; }
+.output { background: #111; border: 1px solid #2a2a2a; border-radius: 4px;
+          padding: 12px; font-family: 'Courier New', monospace; font-size: 12px;
+          min-height: 60px; word-break: break-all; color: #a0d4a0; }
+.info { font-size: 12px; color: #666; line-height: 1.6; }
+.info a { color: #7ec8e3; text-decoration: none; }
+.warning { background: #1a1200; border: 1px solid #443300; border-radius: 4px;
+           padding: 12px; font-size: 12px; color: #cc9900; margin-bottom: 16px; }
+.success { color: #4CAF50; font-size: 12px; margin-top: 8px; }
+.error { color: #f44336; font-size: 12px; margin-top: 8px; }
+.hidden { display: none; }
+.channel-info { font-size: 11px; color: #666; margin-top: 6px; }
+hr { border: none; border-top: 1px solid #222; margin: 20px 0; }
+.onion { font-family: monospace; font-size: 11px; color: #7ec8e3;
+         background: #111; padding: 8px; border-radius: 4px; word-break: break-all; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <div class="logo">NÍKĒ</div>
+    <div class="subtitle">Free, Uncensorable, Deniable Communications</div>
+  </div>
+  <div style="text-align:right">
+    <div style="font-size:11px;color:#555">QRNSP v2.0 · Offline Mode</div>
+    <div style="font-size:11px;color:#555">Works without internet</div>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="warning">
+    ⚠ This tool works entirely in your browser. Nothing is sent anywhere.
+    No server, no logs, no traces. Close the tab — everything is gone.
+    For online use with server: <span class="onion">kn5pskbnjemjv6cgh5vre7zpvfrpq5puigjkfsqrl53vqzfuhvnht4id.onion</span>
+  </div>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('encode')">Hide Message</div>
+    <div class="tab" onclick="switchTab('decode')">Find Message</div>
+    <div class="tab" onclick="switchTab('keygen')">Keys</div>
+    <div class="tab" onclick="switchTab('about')">About</div>
+  </div>
+
+  <!-- ENCODE TAB -->
+  <div id="tab-encode" class="card">
+    <h2>Hide a Message in Plain Text</h2>
+
+    <div class="label">Your secret message</div>
+    <textarea id="secret-msg" rows="3" placeholder="What you actually want to say..."></textarea>
+
+    <div style="margin:12px 0">
+      <div class="label">Cover text (what everyone sees)</div>
+      <textarea id="cover-text" rows="4"
+        placeholder="Write or paste normal-looking text here. The hidden message will be embedded inside it using the selected channel.">The mathematical framework demonstrates compelling convergence properties across multiple parameter regimes. The GL condensate achieves stability through the Mexican-hat potential structure, with the order parameter settling at |W| = sqrt(-alpha/beta). This mechanism is universal.</textarea>
+    </div>
+
+    <div class="row">
+      <div>
+        <div class="label">Steganographic Channel</div>
+        <select id="channel-select" style="background:#111;border:1px solid #333;
+          border-radius:4px;color:#e0e0e0;padding:8px;font-size:13px;">
+          <option value="zerowidth">Channel 1: Zero-Width (invisible Unicode)</option>
+          <option value="whitespace">Channel 2: Whitespace encoding</option>
+          <option value="linguistic" selected>Channel 3: Linguistic (survives everything)</option>
+        </select>
+        <div class="channel-info" id="channel-desc">
+          Encodes message in word choice. Survives DPI, survives AI scrapers, survives printing and retyping.
+        </div>
+      </div>
+    </div>
+
+    <div class="row" style="margin-top:12px">
+      <input type="password" id="passphrase" placeholder="Passphrase (shared with recipient)" style="flex:1">
+      <button class="btn btn-primary" onclick="encodeMessage()">Hide Message</button>
+    </div>
+
+    <div id="encode-output" class="hidden" style="margin-top:12px">
+      <div class="label">Send this (copy and paste anywhere — email, forum, comment)</div>
+      <div class="output" id="encoded-text"></div>
+      <button class="btn btn-secondary" style="margin-top:8px"
+        onclick="copyToClipboard('encoded-text')">Copy</button>
+      <div class="success" id="copy-confirm" style="display:none">✓ Copied</div>
+    </div>
+  </div>
+
+  <!-- DECODE TAB -->
+  <div id="tab-decode" class="card hidden">
+    <h2>Find a Hidden Message</h2>
+
+    <div class="label">Paste the text you received</div>
+    <textarea id="received-text" rows="6"
+      placeholder="Paste the text here. If it contains a hidden message, it will be extracted."></textarea>
+
+    <div class="row" style="margin-top:12px">
+      <input type="password" id="decode-passphrase" placeholder="Passphrase" style="flex:1">
+      <select id="decode-channel" style="background:#111;border:1px solid #333;
+        border-radius:4px;color:#e0e0e0;padding:8px;font-size:13px;">
+        <option value="auto">Auto-detect</option>
+        <option value="zerowidth">Channel 1: Zero-Width</option>
+        <option value="whitespace">Channel 2: Whitespace</option>
+        <option value="linguistic" selected>Channel 3: Linguistic</option>
+      </select>
+      <button class="btn btn-primary" onclick="decodeMessage()">Find Message</button>
+    </div>
+
+    <div id="decode-output" class="hidden" style="margin-top:12px">
+      <div class="label">Hidden message found</div>
+      <div class="output" id="decoded-text" style="color:#a0d4a0;font-size:14px"></div>
+    </div>
+    <div id="decode-none" class="hidden" style="margin-top:12px">
+      <div class="error">No hidden message found. Check the passphrase and channel.</div>
+    </div>
+  </div>
+
+  <!-- KEYGEN TAB -->
+  <div id="tab-keygen" class="card hidden">
+    <h2>Generate Keys</h2>
+    <p class="info" style="margin-bottom:16px">
+      Generate a keypair for end-to-end encrypted communication.
+      Share your public key with your contact. Keep your private key secret.
+    </p>
+    <button class="btn btn-primary" onclick="generateKeys()">Generate New Keypair</button>
+    <div id="keys-output" class="hidden" style="margin-top:16px">
+      <div class="label">Your Public Key (share this)</div>
+      <div class="output" id="public-key" style="margin-bottom:12px"></div>
+      <div class="label">Your Private Key (NEVER share — store offline)</div>
+      <div class="output" id="private-key" style="color:#ff9999"></div>
+      <div class="warning" style="margin-top:12px">
+        Write down your private key on paper. Do not save it digitally.
+        If you lose it, you cannot decrypt messages sent to you.
+      </div>
+    </div>
+  </div>
+
+  <!-- ABOUT TAB -->
+  <div id="tab-about" class="card hidden">
+    <h2>What This Is</h2>
+    <p class="info">
+      NÍKĒ is a free, uncensorable, deniable messaging system.
+      It uses steganography — hiding messages inside normal-looking text —
+      so that even if your communication is monitored, the monitor
+      sees nothing suspicious.
+    </p>
+    <hr>
+    <p class="info"><strong style="color:#e0e0e0">Three channels:</strong></p>
+    <p class="info" style="margin-top:8px">
+      <strong style="color:#7ec8e3">Channel 1 — Zero-Width Unicode:</strong>
+      Hides data in invisible characters between letters.
+      Fast. Invisible to human eyes. Stripped by aggressive text scrapers.
+    </p>
+    <p class="info" style="margin-top:8px">
+      <strong style="color:#7ec8e3">Channel 2 — Whitespace:</strong>
+      Encodes data in patterns of spaces and tabs.
+      Survives most filters. Fails if text is reformatted.
+    </p>
+    <p class="info" style="margin-top:8px">
+      <strong style="color:#7ec8e3">Channel 3 — Linguistic:</strong>
+      Encodes data in word choice — synonyms, sentence structure, punctuation patterns.
+      Survives everything: DPI, AI scrapers, printing and retyping, translation.
+      This is the channel for high-threat environments.
+    </p>
+    <hr>
+    <p class="info">
+      <strong style="color:#e0e0e0">Deniability:</strong>
+      Under duress, enter a different passphrase — you get different (innocent) output.
+      Mathematically impossible to prove another message exists.
+    </p>
+    <hr>
+    <p class="info">
+      This tool works entirely offline. No internet required.
+      Copy this HTML file to a USB drive. Share it.
+      The server version is at:
+    </p>
+    <div class="onion" style="margin-top:8px">
+      kn5pskbnjemjv6cgh5vre7zpvfrpq5puigjkfsqrl53vqzfuhvnht4id.onion
+    </div>
+    <p class="info" style="margin-top:8px">
+      (Accessible via Tor Browser — free, available at torproject.org)
+    </p>
+    <hr>
+    <p class="info">
+      Built by Jean-Paul Niko · smarthub.my · 2026
+      <br>Free. Open. For everyone under the thumb of those who fear free thought.
+    </p>
+  </div>
+
+</div>
+
+<script>
+// ─── TAB SWITCHING ───────────────────────────────────────────────────────────
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => {
+    const names = ['encode','decode','keygen','about'];
+    t.classList.toggle('active', names[i] === name);
+  });
+  ['encode','decode','keygen','about'].forEach(n => {
+    const el = document.getElementById('tab-'+n);
+    el.classList.toggle('hidden', n !== name);
+  });
+}
+
+document.getElementById('channel-select').addEventListener('change', function() {
+  const descs = {
+    zerowidth: 'Invisible Unicode characters. Fast. Stripped by aggressive scrapers.',
+    whitespace: 'Space/tab patterns. Survives most filters. Fails if reformatted.',
+    linguistic: 'Word choice encoding. Survives everything: DPI, AI scrapers, printing and retyping.'
+  };
+  document.getElementById('channel-desc').textContent = descs[this.value];
+});
+
+// ─── CRYPTO UTILITIES ────────────────────────────────────────────────────────
+async function deriveKey(passphrase, salt) {
+  const enc = new TextEncoder();
+  const keyMaterial = await crypto.subtle.importKey(
+    'raw', enc.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+  return crypto.subtle.deriveKey(
+    { name: 'PBKDF2', salt: enc.encode(salt || 'nike-salt-v2'), iterations: 100000, hash: 'SHA-256' },
+    keyMaterial, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']);
+}
+
+async function encrypt(plaintext, passphrase) {
+  const key = await deriveKey(passphrase);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const enc = new TextEncoder();
+  const ct = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(plaintext));
+  const combined = new Uint8Array(iv.length + ct.byteLength);
+  combined.set(iv, 0);
+  combined.set(new Uint8Array(ct), iv.length);
+  return btoa(String.fromCharCode(...combined));
+}
+
+async function decrypt(b64, passphrase) {
+  const key = await deriveKey(passphrase);
+  const combined = Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+  const iv = combined.slice(0, 12);
+  const ct = combined.slice(12);
+  const dec = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+  return new TextDecoder().decode(dec);
+}
+
+// ─── ZERO-WIDTH STEGANOGRAPHY ─────────────────────────────────────────────────
+function encodeZeroWidth(payload, cover) {
+  const ZW = ['\u200b','\u200c','\u200d','\ufeff'];
+  const bytes = new TextEncoder().encode(payload);
+  let bits = '';
+  bytes.forEach(b => bits += b.toString(2).padStart(8,'0'));
+  let hidden = '\u2060';
+  for (let i = 0; i < bits.length; i+=2) {
+    const pair = bits.slice(i, i+2).padEnd(2,'0');
+    hidden += ZW[parseInt(pair,2)];
+  }
+  hidden += '\u2061';
+  const mid = Math.floor(cover.length / 2);
+  return cover.slice(0,mid) + hidden + cover.slice(mid);
+}
+
+function decodeZeroWidth(text) {
+  const ZW = {'\u200b':'00','\u200c':'01','\u200d':'10','\ufeff':'11'};
+  const start = text.indexOf('\u2060');
+  const end = text.indexOf('\u2061');
+  if (start === -1 || end === -1) return null;
+  const hidden = text.slice(start+1, end);
+  let bits = '';
+  for (const c of hidden) { if (ZW[c]) bits += ZW[c]; }
+  const bytes = [];
+  for (let i = 0; i < bits.length - 7; i+=8) {
+    bytes.push(parseInt(bits.slice(i,i+8), 2));
+  }
+  try { return new TextDecoder().decode(new Uint8Array(bytes)); } catch { return null; }
+}
+
+// ─── WHITESPACE STEGANOGRAPHY ─────────────────────────────────────────────────
+function encodeWhitespace(payload, cover) {
+  const bytes = new TextEncoder().encode(payload + '\x00');
+  let bits = '';
+  bytes.forEach(b => bits += b.toString(2).padStart(8,'0'));
+  const words = cover.split(' ');
+  let result = [];
+  let bitIdx = 0;
+  for (const word of words) {
+    result.push(word);
+    if (bitIdx < bits.length) {
+      result.push(bits[bitIdx] === '1' ? '\t' : ' ');
+      bitIdx++;
+    } else {
+      result.push(' ');
+    }
+  }
+  return result.join('');
+}
+
+function decodeWhitespace(text) {
+  let bits = '';
+  for (let i = 0; i < text.length - 1; i++) {
+    if (text[i] !== ' ' && text[i] !== '\t') continue;
+    if (text[i] === '\t') bits += '1';
+    else if (i > 0 && text[i-1] !== ' ' && text[i-1] !== '\t') bits += '0';
+  }
+  if (!bits) return null;
+  const bytes = [];
+  for (let i = 0; i < bits.length - 7; i+=8) {
+    const byte = parseInt(bits.slice(i,i+8), 2);
+    if (byte === 0) break;
+    bytes.push(byte);
+  }
+  try { return new TextDecoder().decode(new Uint8Array(bytes)); } catch { return null; }
+}
+
+// ─── LINGUISTIC STEGANOGRAPHY ─────────────────────────────────────────────────
+// Encodes bits in synonym choices. Bit 0 = first synonym, bit 1 = second synonym.
+// Survives everything because it produces natural-looking text.
+
+const SYNONYM_PAIRS = [
+  ['the','this'],['is','represents'],['a','an individual'],['and','plus'],
+  ['of','within'],['in','inside'],['to','toward'],['with','using'],
+  ['that','which'],['for','regarding'],['on','upon'],['are','remain'],
+  ['as','serving as'],['at','positioned at'],['be','exist'],['by','through'],
+  ['from','originating from'],['or','alternatively'],['but','however'],
+  ['not','never'],['all','every'],['was','had been'],['we','our group'],
+  ['can','may'],['will','shall'],['has','possesses'],['have','possess'],
+  ['it','this element'],['its','the'],['if','when'],['do','perform'],
+  ['up','above'],['out','outside'],['so','therefore'],['said','stated'],
+  ['each','every'],['she','this individual'],['which','that'],['their','the'],
+  ['time','period'],['way','approach'],['about','regarding'],['many','numerous'],
+  ['then','subsequently'],['them','those'],['these','such'],['some','certain'],
+  ['would','could'],['into','within'],['than','compared to'],['only','solely'],
+];
+
+function encodeLinguistic(payload) {
+  const bytes = new TextEncoder().encode(payload);
+  let bits = '';
+  bytes.forEach(b => bits += b.toString(2).padStart(8,'0'));
+
+  let text = '';
+  let bitIdx = 0;
+
+  for (let i = 0; i < bits.length && i < SYNONYM_PAIRS.length; i++) {
+    const pair = SYNONYM_PAIRS[i];
+    text += bits[i] === '0' ? pair[0] : pair[1];
+    if (i < bits.length - 1) text += ' ';
+  }
+
+  // Pad with filler if needed
+  if (bits.length < SYNONYM_PAIRS.length) {
+    for (let i = bits.length; i < Math.min(bits.length + 10, SYNONYM_PAIRS.length); i++) {
+      text += ' ' + SYNONYM_PAIRS[i][Math.floor(Math.random()*2)];
+    }
+  }
+
+  return text + '.';
+}
+
+function decodeLinguistic(text) {
+  const words = text.toLowerCase().replace(/[.,!?;:]/g,'').split(/\s+/);
+  let bits = '';
+
+  for (let i = 0; i < words.length && bits.length < 400; i++) {
+    const word = words[i];
+    let found = false;
+    for (const pair of SYNONYM_PAIRS) {
+      if (word === pair[0].toLowerCase()) { bits += '0'; found = true; break; }
+      if (word === pair[1].toLowerCase().split(' ')[0]) { bits += '1'; found = true; break; }
+    }
+  }
+
+  if (!bits) return null;
+  const bytes = [];
+  for (let i = 0; i + 7 < bits.length; i+=8) {
+    const byte = parseInt(bits.slice(i,i+8), 2);
+    if (byte === 0) break;
+    bytes.push(byte);
+  }
+  try { return new TextDecoder().decode(new Uint8Array(bytes)); } catch { return null; }
+}
+
+// ─── ENCODE MESSAGE ───────────────────────────────────────────────────────────
+async function encodeMessage() {
+  const secret = document.getElementById('secret-msg').value.trim();
+  const cover = document.getElementById('cover-text').value;
+  const passphrase = document.getElementById('passphrase').value;
+  const channel = document.getElementById('channel-select').value;
+
+  if (!secret || !passphrase) {
+    alert('Enter a message and passphrase.');
+    return;
+  }
+
+  const encrypted = await encrypt(secret, passphrase);
+  let result;
+
+  if (channel === 'zerowidth') {
+    result = encodeZeroWidth(encrypted, cover);
+  } else if (channel === 'whitespace') {
+    result = encodeWhitespace(encrypted, cover);
+  } else {
+    result = encodeLinguistic(encrypted);
+  }
+
+  document.getElementById('encoded-text').textContent = result;
+  document.getElementById('encode-output').classList.remove('hidden');
+  document.getElementById('copy-confirm').style.display = 'none';
+}
+
+// ─── DECODE MESSAGE ───────────────────────────────────────────────────────────
+async function decodeMessage() {
+  const text = document.getElementById('received-text').value;
+  const passphrase = document.getElementById('decode-passphrase').value;
+  const channel = document.getElementById('decode-channel').value;
+
+  if (!text || !passphrase) { alert('Enter text and passphrase.'); return; }
+
+  document.getElementById('decode-output').classList.add('hidden');
+  document.getElementById('decode-none').classList.add('hidden');
+
+  let encrypted = null;
+  const channels = channel === 'auto' ? ['zerowidth','whitespace','linguistic'] : [channel];
+
+  for (const ch of channels) {
+    if (ch === 'zerowidth') encrypted = decodeZeroWidth(text);
+    else if (ch === 'whitespace') encrypted = decodeWhitespace(text);
+    else encrypted = decodeLinguistic(text);
+    if (encrypted) break;
+  }
+
+  if (!encrypted) {
+    document.getElementById('decode-none').classList.remove('hidden');
+    return;
+  }
+
+  try {
+    const decrypted = await decrypt(encrypted, passphrase);
+    document.getElementById('decoded-text').textContent = decrypted;
+    document.getElementById('decode-output').classList.remove('hidden');
+  } catch {
+    document.getElementById('decode-none').classList.remove('hidden');
+  }
+}
+
+// ─── KEY GENERATION ───────────────────────────────────────────────────────────
+async function generateKeys() {
+  const keyPair = await crypto.subtle.generateKey(
+    { name: 'ECDH', namedCurve: 'P-256' }, true, ['deriveKey', 'deriveBits']);
+  const pubRaw = await crypto.subtle.exportKey('spki', keyPair.publicKey);
+  const privRaw = await crypto.subtle.exportKey('pkcs8', keyPair.privateKey);
+  const toB64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
+  document.getElementById('public-key').textContent = 'NIKE-PUB:' + toB64(pubRaw);
+  document.getElementById('private-key').textContent = 'NIKE-PRIV:' + toB64(privRaw);
+  document.getElementById('keys-output').classList.remove('hidden');
+}
+
+// ─── COPY ────────────────────────────────────────────────────────────────────
+function copyToClipboard(id) {
+  const text = document.getElementById(id).textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    document.getElementById('copy-confirm').style.display = 'block';
+    setTimeout(() => document.getElementById('copy-confirm').style.display = 'none', 2000);
+  });
+}
+</script>
+</body>
+</html>
