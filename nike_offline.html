@@ -51,6 +51,7 @@ hr { border: none; border-top: 1px solid #222; margin: 20px 0; }
 .onion { font-family: monospace; font-size: 11px; color: #7ec8e3;
          background: #111; padding: 8px; border-radius: 4px; word-break: break-all; }
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 <body>
 
@@ -165,9 +166,15 @@ hr { border: none; border-top: 1px solid #222; margin: 20px 0; }
       <div class="output" id="public-key" style="margin-bottom:12px"></div>
       <div class="label">Your Private Key (NEVER share — store offline)</div>
       <div class="output" id="private-key" style="color:#ff9999"></div>
+      <div style="margin-top:12px">
+        <div class="label">Scan to save private key (photograph this)</div>
+        <div id="priv-qr" style="background:#fff;padding:8px;display:inline-block;border-radius:4px;margin-top:4px"></div>
+      </div>
+      <div style="margin-top:12px">
+        <a id="dl-key" class="btn btn-primary" style="display:none;text-decoration:none">⬇ Download Key File</a>
+      </div>
       <div class="warning" style="margin-top:12px">
-        Write down your private key on paper. Do not save it digitally.
-        If you lose it, you cannot decrypt messages sent to you.
+        The key file and QR code contain your private key. Store them somewhere safe — encrypted storage, printed paper locked away, or a trusted USB drive. Never share the private key with anyone.
       </div>
     </div>
   </div>
@@ -483,9 +490,31 @@ async function generateKeys() {
   const pubRaw = await crypto.subtle.exportKey('spki', keyPair.publicKey);
   const privRaw = await crypto.subtle.exportKey('pkcs8', keyPair.privateKey);
   const toB64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
-  document.getElementById('public-key').textContent = 'NIKE-PUB:' + toB64(pubRaw);
-  document.getElementById('private-key').textContent = 'NIKE-PRIV:' + toB64(privRaw);
+  const pubStr = 'NIKE-PUB:' + toB64(pubRaw);
+  const privStr = 'NIKE-PRIV:' + toB64(privRaw);
+  document.getElementById('public-key').textContent = pubStr;
+  document.getElementById('private-key').textContent = privStr;
   document.getElementById('keys-output').classList.remove('hidden');
+
+  // QR code for private key
+  const qrDiv = document.getElementById('priv-qr');
+  qrDiv.innerHTML = '';
+  if (typeof QRCode !== 'undefined') {
+    new QRCode(qrDiv, { text: privStr, width: 200, height: 200, correctLevel: QRCode.CorrectLevel.M });
+  } else {
+    qrDiv.textContent = '(QR unavailable offline — use download)';
+    qrDiv.style.color = '#888'; qrDiv.style.fontSize = '11px';
+  }
+
+  // Downloadable key file
+  const keyText = 'NIKE KEYPAIR\n' + new Date().toISOString() +
+    '\n\nPUBLIC KEY (share this):\n' + pubStr +
+    '\n\nPRIVATE KEY (never share):\n' + privStr +
+    '\n\nTor: kn5pskbnjemjv6cgh5vre7zpvfrpq5puigjkfsqrl53vqzfuhvnht4id.onion\n';
+  const blob = new Blob([keyText], {type: 'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const dl = document.getElementById('dl-key');
+  dl.href = url; dl.download = 'nike-key-' + Date.now() + '.txt'; dl.style.display = 'inline-block';
 }
 
 // ─── COPY ────────────────────────────────────────────────────────────────────
